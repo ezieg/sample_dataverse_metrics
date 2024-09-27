@@ -24,6 +24,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
+
 def read_metrics(metrics_file):
     #Accepts a filename as argument
     #Returns a DataFrame containing the cleaned data
@@ -36,7 +37,7 @@ def read_metrics(metrics_file):
         metrics_raw = pd.read_csv(open(metrics_file))
     except:
         print('Unable to read file: ' + metrics_file)
-        return()
+        return
 
     for ind in metrics_raw.index:
         try:
@@ -47,10 +48,9 @@ def read_metrics(metrics_file):
             count.append(metrics_raw.loc[ind, 'count'])
         except:
             print('Unable to convert the following record: ' + metrics_raw.loc[ind])
-        
     metrics_data = pd.DataFrame({'date':dates, 'count':count}, index=pid)
+    return metrics_data
 
-    return(metrics_data)
 
 def by_doi(metrics_data):
     #Accepts a DataFrame as argument
@@ -67,23 +67,27 @@ def by_doi(metrics_data):
         print('Created file ' + file_name)
     except:
         print('Unable to save file ' + file_name)
-    return(dl_by_doi)
+    return dl_by_doi
+
 
 def by_date(metrics_data):
     #Returns DataFrame of dates and number of downloads for that date
     file_name = 'alltime_dl_by_month.csv'
     date_index = list(metrics_data['date'].drop_duplicates())
     dl_by_date = []
+    
     for month in date_index:
         alltime_dl_monthly = metrics_data[metrics_data['date'] == month]
         dl_by_date.append(alltime_dl_monthly['count'].sum())
     dl_by_date = pd.DataFrame({'count':dl_by_date}, index=date_index)
+    
     try:
         dl_by_date.to_csv(file_name)
         print('Created file ' + file_name)
     except:
-        print('Unable to save file ' + file_name)
-    return(dl_by_date)
+        print('Unable to save file ' + file_name)      
+    return dl_by_date
+
 
 def plot_dl_by_date(metrics_data):
     #Plot the number of downloads over time
@@ -100,6 +104,8 @@ def plot_dl_by_date(metrics_data):
         print('Created file ' + file_name)
     except:
         print('Unable to save file ' + file_name)
+    return
+
 
 def plot_dl_doi(doi_data, doi):
     #Plot the downloads over time of a single UCS dataset
@@ -117,29 +123,29 @@ def plot_dl_doi(doi_data, doi):
         print('Created file ' + file_name)
     except:
         print('Unable to save file ' + file_name)
+    return
+
 
 def main(file_name):
-
+    #Read the data
     metrics_data = read_metrics(file_name)
-
     dl_by_doi = by_doi(metrics_data)
-
     dl_by_date = by_date(metrics_data)
-
+    #Plot the data
     plot_dl_by_date(dl_by_date)
-
     plot_dl_doi(metrics_data, dl_by_doi.index[0])
+
 
 if __name__ == '__main__':
     try:
         directory = str(sys.argv[1])
         os.chdir(directory)
         print('Directory: ' + directory)
+        try:
+            file_name = str(sys.argv[2])
+            print('File name: ' + file_name)
+            main(file_name)
+        except:
+            print('Error: unable to parse argument from command line: file name')
     except:
         print('Error: unable to parse argument from command line: directory name')
-    try:
-        file_name = str(sys.argv[2])
-        print('File name: ' + file_name)
-    except:
-        print('Error: unable to parse argument from command line: file name')
-    main(file_name)
